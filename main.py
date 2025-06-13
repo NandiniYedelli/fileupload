@@ -5,7 +5,7 @@ import json
 import os
 
 # Getting project ID and Pub/Sub topic from environment variables
-PROJECT_ID = "true-record-462618-h8"
+PROJECT_ID = "atlantean-stone-462107-f4"
 TOPIC_ID = "my-topic-1"
 
 publisher = pubsub_v1.PublisherClient()
