@@ -1,41 +1,30 @@
-import functions_framework
+from flask import Flask, request
 from google.cloud import pubsub_v1
-import base64
 import json
 import os
 
-# Getting project ID and Pub/Sub topic from environment variables
-PROJECT_ID = "atlantean-stone-462107-f4"
-TOPIC_ID = "my-topic-1"
+app = Flask(__name__)
 
 publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
+topic_path = publisher.topic_path("atlantean-stone-462107-f4", "my-topic-1")
 
-@functions_framework.cloud_event
-def process_storage_event(cloud_event):
-    """
-    This function is triggered by a Cloud Storage event.
-    """
-    # Getting file data from event
-    data = cloud_event.data
+@app.route("/", methods=["POST"])
+def index():
+    envelope = request.get_json()
+    if not envelope:
+        return "No JSON received", 400
 
-    bucket = data["bucket"]
-    name = data["name"]
-    size = data["size"]
+    # Extract file metadata from CloudEvent
+    event_data = envelope.get("message", {}).get("data")
+    attributes = envelope.get("message", {}).get("attributes")
 
-    # Getting file format
-    file_format = name.split('.')[-1] if '.' in name else 'unknown'
+    print(f"Received event: {attributes}")
 
-    print(f"File {name} uploaded to bucket {bucket}.")
-    print(f"Size: {size} bytes, Format: {file_format}")
-
-    # Data for Pub/Sub Msg
-    message_data = {
-        "fileName": name,
-        "fileSize": size,
-        "fileFormat": file_format
-    }
-
-    # Publishing the message
-    future = publisher.publish(topic_path, data=json.dumps(message_data).encode("utf-8"))
-    print(f"Published message to {topic_path}: {future.result()}")
+    # Publish to Pub/Sub
+    future = publisher.publish(
+        topic_path,
+        data=b"File uploaded",
+        **attributes
+    )
+    print("Published message ID:", future.result())
+    return "OK", 200
