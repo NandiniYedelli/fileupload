@@ -1,3 +1,2 @@
-functions-framework
-google-cloud-pubsub
-cloudevents
+Flask==2.2.5
+google-cloud-pubsub==2.21.0
